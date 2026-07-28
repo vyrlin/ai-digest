@@ -1,0 +1,25 @@
+name: Daily AI digest
+
+on:
+  schedule:
+    # 05:00 UTC = 07:00 Europe/Rome (учти переход на летнее/зимнее время)
+    - cron: "0 5 * * *"
+  workflow_dispatch: {} # позволяет запустить вручную из вкладки Actions
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install
+
+      - run: npm run generate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

@@ -1,0 +1,13 @@
+[
+  { "name": "OpenAI", "url": "https://openai.com/news/rss.xml", "category": "labs" },
+  { "name": "Google AI Blog", "url": "https://blog.google/technology/ai/rss/", "category": "labs" },
+  { "name": "DeepMind", "url": "https://deepmind.google/blog/rss.xml", "category": "labs" },
+  { "name": "arXiv cs.AI", "url": "http://export.arxiv.org/rss/cs.AI", "category": "research" },
+  { "name": "arXiv cs.CL (NLP)", "url": "http://export.arxiv.org/rss/cs.CL", "category": "research" },
+  { "name": "TechCrunch AI", "url": "https://techcrunch.com/category/artificial-intelligence/feed/", "category": "news" },
+  { "name": "VentureBeat AI", "url": "https://venturebeat.com/category/ai/feed/", "category": "news" },
+  { "name": "The Verge AI", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "category": "news" },
+  { "name": "MIT Technology Review — AI", "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed", "category": "news" },
+  { "name": "Wired — AI", "url": "https://www.wired.com/feed/tag/ai/latest/rss", "category": "news" },
+  { "name": "Hugging Face Blog", "url": "https://huggingface.co/blog/feed.xml", "category": "tools" }
+]

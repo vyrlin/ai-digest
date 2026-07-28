@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Signal — ежедневный дайджест об ИИ</title>
+<link rel="stylesheet" href="style.css" />
+<script src="config.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="masthead">
+      <div class="eyebrow">AI SIGNAL · ежедневный дайджест</div>
+      <h1><a href="index.html">AI Signal</a></h1>
+    </header>
+
+    <main id="list">
+      <div class="loading">Загружаю дайджесты…</div>
+    </main>
+  </div>
+
+  <script>
+    const CATEGORY_CLASS = { labs: 'labs', research: 'research', news: 'news', tools: 'tools' };
+
+    function formatDate(d) {
+      return new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function dotsFor(sources) {
+      const cats = new Set((sources || []).map(s => s.category).filter(Boolean));
+      // sources stored on digests don't carry category by default (see schema) —
+      // fall back to a single neutral dot if categories aren't present.
+      if (cats.size === 0) return '<span class="dot news"></span>';
+      return [...cats].map(c => `<span class="dot ${CATEGORY_CLASS[c] || 'news'}"></span>`).join('');
+    }
+
+    async function load() {
+      const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.AI_DIGEST_CONFIG;
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/digests?select=slug,date,title,summary,sources&order=date.desc&limit=30`,
+        { headers: { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+      );
+
+      const list = document.getElementById('list');
+      if (!res.ok) {
+        list.innerHTML = `<div class="empty">Не удалось загрузить дайджесты (${res.status}). Проверь config.js.</div>`;
+        return;
+      }
+
+      const digests = await res.json();
+      if (digests.length === 0) {
+        list.innerHTML = `<div class="empty">Пока нет ни одного дайджеста — первый появится после первого запуска GitHub Action.</div>`;
+        return;
+      }
+
+      list.innerHTML = digests.map(d => `
+        <article class="entry">
+          <div class="entry-meta">
+            <span>${formatDate(d.date)}</span>
+            <span class="signal-strip">${dotsFor(d.sources)}</span>
+          </div>
+          <h2><a href="digest.html?slug=${encodeURIComponent(d.slug)}">${d.title}</a></h2>
+          <p>${d.summary}</p>
+        </article>
+      `).join('');
+    }
+
+    load();
+  </script>
+</body>
+</html>

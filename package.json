@@ -1,0 +1,16 @@
+{
+  "name": "ai-digest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ежедневный дайджест новостей об ИИ: сбор источников, суммаризация через Claude, публикация в Supabase.",
+  "scripts": {
+    "generate": "node scripts/generate-digest.mjs"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
