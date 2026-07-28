@@ -10,6 +10,7 @@ import Parser from "rss-parser";
 import { readFile } from "node:fs/promises";
 
 const WINDOW_HOURS = Number(process.env.WINDOW_HOURS ?? 26); // небольшой запас на случай, если экшен опоздал
+const MAX_ITEMS = Number(process.env.MAX_ITEMS ?? 70); // ограничение, чтобы не перегружать контекст и ответ Claude
 const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5";
 
 const ANTHROPIC_API_KEY = requireEnv("ANTHROPIC_API_KEY");
@@ -91,7 +92,7 @@ async function askClaudeForDigest(items, dateStr) {
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 4000,
+      max_tokens: 8000,
       system,
       messages: [{ role: "user", content: user }],
     }),
@@ -134,12 +135,23 @@ async function main() {
   const today = new Date().toISOString().slice(0, 10);
 
   console.log(`Собираю новости из ${sources.length} источников за последние ${WINDOW_HOURS}ч...`);
-  const items = await collectItems(sources);
-  console.log(`Найдено ${items.length} свежих материалов.`);
+  const allItems = await collectItems(sources);
+  console.log(`Найдено ${allItems.length} свежих материалов.`);
 
-  if (items.length === 0) {
+  if (allItems.length === 0) {
     console.log("Нечего публиковать сегодня — выхожу без ошибки.");
     return;
+  }
+
+  // Сортируем по свежести и ограничиваем количество, чтобы не переполнять
+  // контекст/ответ модели (иначе JSON на выходе может обрезаться).
+  const items = allItems
+    .slice()
+    .sort((a, b) => (Date.parse(b.publishedAt ?? 0) || 0) - (Date.parse(a.publishedAt ?? 0) || 0))
+    .slice(0, MAX_ITEMS);
+
+  if (items.length < allItems.length) {
+    console.log(`Ограничиваю до ${items.length} самых свежих материалов (было ${allItems.length}).`);
   }
 
   console.log("Прошу Claude собрать дайджест...");
