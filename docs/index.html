@@ -55,3 +55,15 @@
         <article class="entry">
           <div class="entry-meta">
             <span>${formatDate(d.date)}</span>
+            <span class="signal-strip">${dotsFor(d.sources)}</span>
+          </div>
+          <h2><a href="digest.html?slug=${encodeURIComponent(d.slug)}">${d.title}</a></h2>
+          <p>${d.summary}</p>
+        </article>
+      `).join('');
+    }
+
+    load();
+  </script>
+</body>
+</html>
