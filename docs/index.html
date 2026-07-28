@@ -3,10 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI Signal</title>
+<title>AI Signal — ежедневный дайджест об ИИ</title>
 <link rel="stylesheet" href="style.css" />
 <script src="config.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -15,8 +14,8 @@
       <h1><a href="index.html">AI Signal</a></h1>
     </header>
 
-    <main id="article">
-      <div class="loading">Загружаю…</div>
+    <main id="list">
+      <div class="loading">Загружаю дайджесты…</div>
     </main>
   </div>
 
@@ -27,52 +26,32 @@
       return new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
-    async function load() {
-      const slug = new URLSearchParams(location.search).get('slug');
-      const article = document.getElementById('article');
-      if (!slug) {
-        article.innerHTML = `<div class="empty">Дайджест не указан.</div>`;
-        return;
-      }
+    function dotsFor(sources) {
+      const cats = new Set((sources || []).map(s => s.category).filter(Boolean));
+      if (cats.size === 0) return '<span class="dot news"></span>';
+      return [...cats].map(c => `<span class="dot ${CATEGORY_CLASS[c] || 'news'}"></span>`).join('');
+    }
 
+    async function load() {
       const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.AI_DIGEST_CONFIG;
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/digests?select=*&slug=eq.${encodeURIComponent(slug)}`,
+        `${SUPABASE_URL}/rest/v1/digests?select=slug,date,title,summary,sources&order=date.desc&limit=30`,
         { headers: { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
       );
 
+      const list = document.getElementById('list');
       if (!res.ok) {
-        article.innerHTML = `<div class="empty">Не удалось загрузить дайджест (${res.status}).</div>`;
+        list.innerHTML = `<div class="empty">Не удалось загрузить дайджесты (${res.status}). Проверь config.js.</div>`;
         return;
       }
 
-      const [d] = await res.json();
-      if (!d) {
-        article.innerHTML = `<div class="empty">Дайджест не найден.</div>`;
+      const digests = await res.json();
+      if (digests.length === 0) {
+        list.innerHTML = `<div class="empty">Пока нет ни одного дайджеста — первый появится после первого запуска GitHub Action.</div>`;
         return;
       }
 
-      document.title = `${d.title} — AI Signal`;
-
-      const sourcesHtml = (d.sources || []).map(s => `
-        <li><span class="src-name">${(s.name || '').toUpperCase()}</span><a href="${s.url}" target="_blank" rel="noopener">${s.title}</a></li>
-      `).join('');
-
-      article.innerHTML = `
-        <div class="article">
-          <div class="article-meta">${formatDate(d.date)} · ${(d.sources || []).length} источников</div>
-          <h1>${d.title}</h1>
-          <div class="article-body">${marked.parse(d.body_markdown)}</div>
-        </div>
-        <div class="sources-box">
-          <h3>Источники</h3>
-          <ul>${sourcesHtml}</ul>
-        </div>
-        <a class="back-link" href="index.html">← Все дайджесты</a>
-      `;
-    }
-
-    load();
-  </script>
-</body>
-</html>
+      list.innerHTML = digests.map(d => `
+        <article class="entry">
+          <div class="entry-meta">
+            <span>${formatDate(d.date)}</span>
